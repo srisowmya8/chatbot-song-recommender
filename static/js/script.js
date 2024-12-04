@@ -3,28 +3,37 @@ document.getElementById("send-btn").addEventListener("click", () => {
     if (!userInput) return;
 
     // Display user's message
-    addMessage(userInput, "user");
+    addMessage(userInput, "user-message");
 
     // Send the input to the backend
-    fetch("https://127.0.0.1:5000/get-recommendations", {
+    fetch("/get-recommendations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userInput }),
     })
         .then(response => response.json())
         .then(data => {
-            // Display the chatbot's response
-            addMessage(data.recommendations.join("<br>"), "bot");
+            // Display the bot's response
+            if (data.recommendations) {
+                addMessage(data.recommendations.join("<br>"), "bot-message");
+            } else {
+                addMessage("Sorry, no recommendations available.", "bot-message");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            addMessage("An error occurred. Please try again later.", "bot-message");
         });
 
     document.getElementById("user-input").value = ""; // Clear input
 });
 
-function addMessage(text, sender) {
-    const chatBox = document.getElementById("chat-box");
-    const message = document.createElement("div");
-    message.className = sender === "user" ? "user-message" : "bot-message";
-    message.innerHTML = text;
-    chatBox.appendChild(message);
-    chatBox.scrollTop = chatBox.scrollHeight; // Scroll to latest message
+// Function to add messages to the chat
+function addMessage(message, senderClass) {
+    const chatBox = document.getElementById("chat");
+    const messageElement = document.createElement("p");
+    messageElement.classList.add(senderClass);
+    messageElement.innerHTML = message;
+    chatBox.appendChild(messageElement);
+    chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
 }
